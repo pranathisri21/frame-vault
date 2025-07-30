@@ -13,7 +13,8 @@ const LoginForm = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn } = useAuth();
+  const [isSignUp, setIsSignUp] = useState(false);
+  const { signIn, signUp } = useAuth();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -21,15 +22,27 @@ const LoginForm = () => {
     setIsLoading(true);
 
     try {
-      await signIn(email, password);
-      toast({
-        title: "Welcome back!",
-        description: "You've successfully signed in to your gallery.",
-      });
+      if (isSignUp) {
+        console.log('LoginForm: Creating account for:', email);
+        await signUp(email, password);
+        toast({
+          title: "Account created!",
+          description: "Welcome to your personal gallery.",
+        });
+      } else {
+        console.log('LoginForm: Signing in user:', email);
+        await signIn(email, password);
+        toast({
+          title: "Welcome back!",
+          description: "You've successfully signed in to your gallery.",
+        });
+      }
     } catch (error: any) {
+      console.error('Auth error:', error);
+      const errorMessage = error?.message || error?.code || 'Authentication failed';
       toast({
-        title: "Sign in failed",
-        description: error.message || "Please check your credentials and try again.",
+        title: isSignUp ? "Sign up failed" : "Sign in failed",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -60,7 +73,7 @@ const LoginForm = () => {
                 Personal Gallery
               </CardTitle>
               <CardDescription className="text-muted-foreground mt-2">
-                Sign in to access your memories
+                {isSignUp ? 'Create your account to start building your gallery' : 'Sign in to access your memories'}
               </CardDescription>
             </div>
           </CardHeader>
@@ -114,9 +127,19 @@ const LoginForm = () => {
                   disabled={isLoading}
                   className="w-full gradient-warm border-0 text-primary-foreground font-medium shadow-soft hover:shadow-medium transition-all duration-200"
                 >
-                  {isLoading ? "Signing in..." : "Sign In"}
+                  {isLoading ? (isSignUp ? "Creating account..." : "Signing in...") : (isSignUp ? "Create Account" : "Sign In")}
                 </Button>
               </motion.div>
+              
+              <div className="text-center mt-4">
+                <button
+                  type="button"
+                  onClick={() => setIsSignUp(!isSignUp)}
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors underline"
+                >
+                  {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Create one"}
+                </button>
+              </div>
             </form>
           </CardContent>
         </Card>

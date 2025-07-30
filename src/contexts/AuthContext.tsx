@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
+import { User, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -24,15 +25,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   const signIn = async (email: string, password: string) => {
+    console.log('AuthContext: Attempting sign in for:', email);
     await signInWithEmailAndPassword(auth, email, password);
   };
 
+  const signUp = async (email: string, password: string) => {
+    console.log('AuthContext: Attempting sign up for:', email);
+    await createUserWithEmailAndPassword(auth, email, password);
+  };
+
   const logout = async () => {
+    console.log('AuthContext: Logging out user');
     await signOut(auth);
   };
 
   useEffect(() => {
+    console.log('AuthContext: Setting up auth state listener');
     const unsubscribe = onAuthStateChanged(auth, (user) => {
+      console.log('AuthContext: Auth state changed:', user ? `User logged in: ${user.email}` : 'User logged out');
       setUser(user);
       setLoading(false);
     });
@@ -44,6 +54,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     loading,
     signIn,
+    signUp,
     logout
   };
 

@@ -13,12 +13,18 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
+console.log('Firebase: Initializing Firebase app...');
 const app = initializeApp(firebaseConfig);
+console.log('Firebase: App initialized successfully');
 
 // Initialize Firebase Auth
+console.log('Firebase: Initializing Auth...');
 export const auth = getAuth(app);
+console.log('Firebase: Auth initialized successfully');
 
 // Initialize Firestore
+console.log('Firebase: Initializing Firestore...');
 export const db = getFirestore(app);
+console.log('Firebase: Firestore initialized successfully');
 
 export default app;
