@@ -1,13 +1,13 @@
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import LoginForm from '@/components/auth/LoginForm';
-import Gallery from './Gallery';
-import Admin from './Admin';
-import { useLocation } from 'react-router-dom';
 
-const Index = () => {
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+}
+
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { user, loading } = useAuth();
-  const location = useLocation();
 
   if (loading) {
     return (
@@ -26,13 +26,7 @@ const Index = () => {
     return <LoginForm />;
   }
 
-  // Route to admin if path is /admin
-  if (location.pathname === '/admin') {
-    return <Admin />;
-  }
-
-  // Default to gallery
-  return <Gallery />;
+  return <>{children}</>;
 };
 
-export default Index;
+export default ProtectedRoute;
