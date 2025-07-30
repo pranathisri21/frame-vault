@@ -38,13 +38,16 @@ const Gallery = () => {
   const loadSets = async () => {
     try {
       setIsLoading(true);
+      console.log('Loading media sets...');
       const mediaSets = await getMediaSets();
+      console.log('Loaded sets:', mediaSets);
       setSets(mediaSets);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading sets:', error);
+      const errorMessage = error?.message || error?.code || 'Unknown error occurred';
       toast({
         title: "Failed to load gallery",
-        description: "Please refresh the page and try again.",
+        description: `Error: ${errorMessage}. Check console for details.`,
         variant: "destructive",
       });
     } finally {

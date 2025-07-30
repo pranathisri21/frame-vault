@@ -19,27 +19,47 @@ const MEDIA_COLLECTION = 'mediaItems';
 
 // Media Sets
 export const createMediaSet = async (name: string): Promise<string> => {
-  const setData = {
-    name,
-    createdAt: Timestamp.now(),
-    updatedAt: Timestamp.now(),
-    mediaCount: 0
-  };
-  
-  const docRef = await addDoc(collection(db, SETS_COLLECTION), setData);
-  return docRef.id;
+  try {
+    console.log('Creating media set with name:', name);
+    console.log('Firebase DB instance:', db);
+    
+    const setData = {
+      name,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+      mediaCount: 0
+    };
+    
+    console.log('Set data to be created:', setData);
+    const docRef = await addDoc(collection(db, SETS_COLLECTION), setData);
+    console.log('Set created successfully with ID:', docRef.id);
+    return docRef.id;
+  } catch (error) {
+    console.error('Detailed error creating set:', error);
+    throw error;
+  }
 };
 
 export const getMediaSets = async (): Promise<MediaSet[]> => {
-  const q = query(collection(db, SETS_COLLECTION), orderBy('createdAt', 'desc'));
-  const querySnapshot = await getDocs(q);
-  
-  return querySnapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data(),
-    createdAt: doc.data().createdAt.toDate(),
-    updatedAt: doc.data().updatedAt.toDate()
-  })) as MediaSet[];
+  try {
+    console.log('Fetching media sets from collection:', SETS_COLLECTION);
+    const q = query(collection(db, SETS_COLLECTION), orderBy('createdAt', 'desc'));
+    const querySnapshot = await getDocs(q);
+    
+    console.log('Found', querySnapshot.docs.length, 'sets');
+    const sets = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt.toDate(),
+      updatedAt: doc.data().updatedAt.toDate()
+    })) as MediaSet[];
+    
+    console.log('Processed sets:', sets);
+    return sets;
+  } catch (error) {
+    console.error('Detailed error fetching sets:', error);
+    throw error;
+  }
 };
 
 export const updateMediaSet = async (setId: string, updates: Partial<MediaSet>): Promise<void> => {

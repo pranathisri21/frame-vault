@@ -23,18 +23,21 @@ const CreateSetForm: React.FC<CreateSetFormProps> = ({ onSetCreated }) => {
 
     setIsLoading(true);
     try {
-      await createMediaSet(setName.trim());
+      console.log('Attempting to create set:', setName.trim());
+      const setId = await createMediaSet(setName.trim());
+      console.log('Set created with ID:', setId);
       toast({
         title: "Set created successfully!",
         description: `"${setName}" is ready for media uploads.`,
       });
       setSetName('');
       onSetCreated();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating set:', error);
+      const errorMessage = error?.message || error?.code || 'Unknown error occurred';
       toast({
         title: "Failed to create set",
-        description: "Please try again.",
+        description: `Error: ${errorMessage}. Check console for details.`,
         variant: "destructive",
       });
     } finally {

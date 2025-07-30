@@ -1,0 +1,22 @@
+// Firestore Security Rules
+// Copy these rules to your Firebase Console > Firestore Database > Rules
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow read/write access to authenticated users only
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Specific rules for media sets
+    match /mediaSets/{setId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Specific rules for media items
+    match /mediaItems/{itemId} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
