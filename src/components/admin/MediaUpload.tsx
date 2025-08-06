@@ -59,31 +59,47 @@ const MediaUpload: React.FC<MediaUploadProps> = ({ sets, onMediaUploaded }) => {
         const fileKey = `${file.name}-${i}`;
         
         try {
+          console.log(`🔄 Starting upload for file ${i + 1}/${files.length}:`, file.name);
           setUploadProgress(prev => ({ ...prev, [fileKey]: 20 }));
           
           // Upload to Cloudinary
+          console.log('⬆️ Uploading to Cloudinary...');
           const cloudinaryResponse = await uploadToCloudinary(file);
+          console.log('✅ Cloudinary upload complete:', cloudinaryResponse);
           
           setUploadProgress(prev => ({ ...prev, [fileKey]: 70 }));
           
           // Save to Firestore
           const mediaTitle = title || file.name.split('.')[0];
-          await createMediaItem({
+          const mediaItemData = {
             title: `${mediaTitle}${files.length > 1 ? ` (${i + 1})` : ''}`,
             cloudinaryUrl: cloudinaryResponse.secure_url,
             type: cloudinaryResponse.resource_type,
             setId: selectedSetId,
             publicId: cloudinaryResponse.public_id
-          });
+          };
+          
+          console.log('💾 Saving to Firestore with data:', mediaItemData);
+          const mediaItemId = await createMediaItem(mediaItemData);
+          console.log('✅ Media item saved with ID:', mediaItemId);
           
           setUploadProgress(prev => ({ ...prev, [fileKey]: 100 }));
           successfulUploads.push(file.name);
+          console.log(`✅ Successfully uploaded: ${file.name}`);
           
         } catch (error) {
-          console.error(`Error uploading ${file.name}:`, error);
+          console.error(`💥 Error uploading ${file.name}:`, error);
+          
+          // Log detailed error information
+          if (error instanceof Error) {
+            console.error('Error name:', error.name);
+            console.error('Error message:', error.message);
+            console.error('Error stack:', error.stack);
+          }
+          
           toast({
             title: `Failed to upload ${file.name}`,
-            description: "Please try again.",
+            description: error instanceof Error ? error.message : "Unknown error occurred. Check console for details.",
             variant: "destructive",
           });
         }

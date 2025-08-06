@@ -24,10 +24,13 @@ const SetSection: React.FC<SetSectionProps> = ({ set }) => {
   const loadMediaItems = async () => {
     try {
       setIsLoading(true);
+      console.log('🔄 Loading media items for set:', set.id, set.name);
       const items = await getMediaItemsBySet(set.id);
+      console.log('📊 Loaded media items for set', set.name, ':', items.length, 'items');
+      console.log('📝 Media items data:', items);
       setMediaItems(items);
     } catch (error) {
-      console.error('Error loading media items:', error);
+      console.error('💥 Error loading media items for set:', set.id, error);
     } finally {
       setIsLoading(false);
     }

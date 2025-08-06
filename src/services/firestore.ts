@@ -82,20 +82,39 @@ export const deleteMediaSet = async (setId: string): Promise<void> => {
 
 // Media Items
 export const createMediaItem = async (mediaData: Omit<MediaItem, 'id' | 'createdAt'>): Promise<string> => {
-  const itemData = {
-    ...mediaData,
-    createdAt: Timestamp.now()
-  };
-  
-  const docRef = await addDoc(collection(db, MEDIA_COLLECTION), itemData);
-  
-  // Update media count in the set
-  const setMediaItems = await getMediaItemsBySet(mediaData.setId);
-  await updateMediaSet(mediaData.setId, { 
-    mediaCount: setMediaItems.length + 1 
-  });
-  
-  return docRef.id;
+  try {
+    console.log('🔄 Creating media item with data:', mediaData);
+    console.log('🗂️ Target collection:', MEDIA_COLLECTION);
+    
+    const itemData = {
+      ...mediaData,
+      createdAt: Timestamp.now()
+    };
+    
+    console.log('📝 Final item data to save:', itemData);
+    
+    const docRef = await addDoc(collection(db, MEDIA_COLLECTION), itemData);
+    console.log('✅ Media item created successfully with ID:', docRef.id);
+    
+    // Update media count in the set
+    console.log('🔄 Updating media count for set:', mediaData.setId);
+    const setMediaItems = await getMediaItemsBySet(mediaData.setId);
+    console.log('📊 Current media count in set:', setMediaItems.length);
+    
+    await updateMediaSet(mediaData.setId, { 
+      mediaCount: setMediaItems.length + 1 
+    });
+    console.log('✅ Media count updated successfully');
+    
+    return docRef.id;
+  } catch (error) {
+    console.error('💥 Error creating media item:', error);
+    if (error instanceof Error) {
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
+    throw error;
+  }
 };
 
 export const getMediaItemsBySet = async (setId: string): Promise<MediaItem[]> => {
