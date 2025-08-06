@@ -96,15 +96,20 @@ export const createMediaItem = async (mediaData: Omit<MediaItem, 'id' | 'created
     const docRef = await addDoc(collection(db, MEDIA_COLLECTION), itemData);
     console.log('✅ Media item created successfully with ID:', docRef.id);
     
-    // Update media count in the set
-    console.log('🔄 Updating media count for set:', mediaData.setId);
-    const setMediaItems = await getMediaItemsBySet(mediaData.setId);
-    console.log('📊 Current media count in set:', setMediaItems.length);
+    // Update media count in the set by incrementing it
+    console.log('🔄 Incrementing media count for set:', mediaData.setId);
+    const setRef = doc(db, SETS_COLLECTION, mediaData.setId);
     
-    await updateMediaSet(mediaData.setId, { 
-      mediaCount: setMediaItems.length + 1 
+    // Get current set data to increment the count
+    const currentSets = await getMediaSets();
+    const currentSet = currentSets.find(set => set.id === mediaData.setId);
+    const newCount = (currentSet?.mediaCount || 0) + 1;
+    
+    await updateDoc(setRef, { 
+      mediaCount: newCount,
+      updatedAt: Timestamp.now()
     });
-    console.log('✅ Media count updated successfully');
+    console.log('✅ Media count updated to:', newCount);
     
     return docRef.id;
   } catch (error) {
@@ -118,18 +123,32 @@ export const createMediaItem = async (mediaData: Omit<MediaItem, 'id' | 'created
 };
 
 export const getMediaItemsBySet = async (setId: string): Promise<MediaItem[]> => {
-  const q = query(
-    collection(db, MEDIA_COLLECTION), 
-    where('setId', '==', setId),
-    orderBy('createdAt', 'desc')
-  );
-  const querySnapshot = await getDocs(q);
-  
-  return querySnapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data(),
-    createdAt: doc.data().createdAt.toDate()
-  })) as MediaItem[];
+  try {
+    console.log('🔄 Fetching media items for set:', setId);
+    // Simplified query without orderBy to avoid index requirement
+    const q = query(
+      collection(db, MEDIA_COLLECTION), 
+      where('setId', '==', setId)
+    );
+    const querySnapshot = await getDocs(q);
+    
+    console.log('📊 Found media items:', querySnapshot.docs.length);
+    
+    const items = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt.toDate()
+    })) as MediaItem[];
+    
+    // Sort on client side instead of using Firestore orderBy
+    const sortedItems = items.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    
+    console.log('✅ Processed and sorted media items:', sortedItems.length);
+    return sortedItems;
+  } catch (error) {
+    console.error('💥 Error fetching media items by set:', error);
+    throw error;
+  }
 };
 
 export const getAllMediaItems = async (): Promise<MediaItem[]> => {
