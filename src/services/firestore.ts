@@ -88,7 +88,8 @@ export const createMediaItem = async (mediaData: Omit<MediaItem, 'id' | 'created
     
     const itemData = {
       ...mediaData,
-      createdAt: Timestamp.now()
+      createdAt: Timestamp.now(),
+      isPrivate: mediaData.isPrivate || false // Ensure privacy field is set
     };
     
     console.log('📝 Final item data to save:', itemData);
@@ -122,10 +123,10 @@ export const createMediaItem = async (mediaData: Omit<MediaItem, 'id' | 'created
   }
 };
 
-export const getMediaItemsBySet = async (setId: string): Promise<MediaItem[]> => {
+export const getMediaItemsBySet = async (setId: string, includePrivate: boolean = false): Promise<MediaItem[]> => {
   try {
-    console.log('🔄 Fetching media items for set:', setId);
-    // Simplified query without orderBy to avoid index requirement
+    console.log('🔄 Fetching media items for set:', setId, 'includePrivate:', includePrivate);
+    
     const q = query(
       collection(db, MEDIA_COLLECTION), 
       where('setId', '==', setId)
@@ -134,11 +135,18 @@ export const getMediaItemsBySet = async (setId: string): Promise<MediaItem[]> =>
     
     console.log('📊 Found media items:', querySnapshot.docs.length);
     
-    const items = querySnapshot.docs.map(doc => ({
+    let items = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
-      createdAt: doc.data().createdAt.toDate()
+      createdAt: doc.data().createdAt.toDate(),
+      isPrivate: doc.data().isPrivate || false // Ensure privacy field exists
     })) as MediaItem[];
+    
+    // Filter out private items if not including them
+    if (!includePrivate) {
+      items = items.filter(item => !item.isPrivate);
+      console.log('📊 Public media items after filtering:', items.length);
+    }
     
     // Sort on client side instead of using Firestore orderBy
     const sortedItems = items.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());

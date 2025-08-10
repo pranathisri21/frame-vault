@@ -1,3 +1,4 @@
+
 export interface MediaSet {
   id: string;
   name: string;
@@ -14,6 +15,7 @@ export interface MediaItem {
   setId: string;
   createdAt: Date;
   publicId: string; // Cloudinary public ID for management
+  isPrivate: boolean; // New privacy field
 }
 
 export interface CloudinaryUploadResponse {

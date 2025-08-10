@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useDropzone } from 'react-dropzone';
@@ -6,11 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { uploadToCloudinary } from '@/services/cloudinary';
 import { createMediaItem } from '@/services/firestore';
 import { MediaSet } from '@/types/gallery';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, FileImage, FileVideo, X } from 'lucide-react';
+import { Upload, FileImage, FileVideo, X, Lock, Globe } from 'lucide-react';
 
 interface MediaUploadProps {
   sets: MediaSet[];
@@ -21,6 +23,7 @@ const MediaUpload: React.FC<MediaUploadProps> = ({ sets, onMediaUploaded }) => {
   const [selectedSetId, setSelectedSetId] = useState('');
   const [title, setTitle] = useState('');
   const [files, setFiles] = useState<File[]>([]);
+  const [isPrivate, setIsPrivate] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
   const { toast } = useToast();
@@ -76,7 +79,8 @@ const MediaUpload: React.FC<MediaUploadProps> = ({ sets, onMediaUploaded }) => {
             cloudinaryUrl: cloudinaryResponse.secure_url,
             type: cloudinaryResponse.resource_type,
             setId: selectedSetId,
-            publicId: cloudinaryResponse.public_id
+            publicId: cloudinaryResponse.public_id,
+            isPrivate: isPrivate
           };
           
           console.log('💾 Saving to Firestore with data:', mediaItemData);
@@ -114,6 +118,7 @@ const MediaUpload: React.FC<MediaUploadProps> = ({ sets, onMediaUploaded }) => {
         // Reset form
         setFiles([]);
         setTitle('');
+        setIsPrivate(false);
         setUploadProgress({});
         onMediaUploaded();
       }
@@ -159,6 +164,35 @@ const MediaUpload: React.FC<MediaUploadProps> = ({ sets, onMediaUploaded }) => {
             onChange={(e) => setTitle(e.target.value)}
             disabled={isUploading}
           />
+        </div>
+
+        {/* Privacy Toggle */}
+        <div className="space-y-2">
+          <Label htmlFor="privacy">Privacy Setting</Label>
+          <div className="flex items-center space-x-3 p-3 bg-muted/50 rounded-lg">
+            <div className="flex items-center space-x-2">
+              {isPrivate ? (
+                <Lock className="w-4 h-4 text-destructive" />
+              ) : (
+                <Globe className="w-4 h-4 text-primary" />
+              )}
+              <span className="text-sm font-medium">
+                {isPrivate ? 'Private' : 'Public'}
+              </span>
+            </div>
+            <Switch
+              id="privacy"
+              checked={isPrivate}
+              onCheckedChange={setIsPrivate}
+              disabled={isUploading}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {isPrivate 
+              ? 'Only visible to you in admin view' 
+              : 'Visible to everyone on the main gallery'
+            }
+          </p>
         </div>
 
         {/* File Upload Area */}
